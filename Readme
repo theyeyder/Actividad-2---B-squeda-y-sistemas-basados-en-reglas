@@ -1,0 +1,739 @@
+# ACTIVIDAD 2  
+## Búsqueda y sistemas basados en reglas
+
+### Introducción
+
+La inteligencia artificial permite desarrollar sistemas capaces de analizar diferentes alternativas y tomar decisiones a partir de información previamente definida. Dentro de este campo se encuentran los sistemas basados en conocimiento, las reglas lógicas y las técnicas de búsqueda heurística, que permiten resolver problemas de una manera estructurada.
+
+Para esta actividad se desarrolló en Python un sistema inteligente de rutas aplicado a una red de transporte. El programa permite que el usuario seleccione una estación de origen y una estación de destino. A partir de esta información, el sistema analiza las conexiones disponibles, los tiempos de recorrido y las reglas establecidas para determinar la mejor ruta posible.
+
+
+
+---
+
+# Objetivo general
+
+Desarrollar un sistema inteligente en Python que utilice una base de conocimiento, reglas lógicas y técnicas de búsqueda heurística para determinar la mejor ruta entre una estación de origen y una estación de destino dentro de una red de transporte.
+
+---
+
+# Objetivos específicos
+
+- Representar una red de transporte mediante una estructura de conocimiento.
+- Definir reglas lógicas para controlar las decisiones del sistema.
+- Implementar el algoritmo A* como estrategia de búsqueda heurística.
+- Determinar una ruta entre una estación de origen y una estación de destino.
+- Calcular el tiempo estimado del recorrido.
+- Tener en cuenta los cambios de línea durante el desplazamiento.
+- Representar gráficamente el recorrido realizado por el tren.
+- Permitir que el usuario realice diferentes pruebas dentro del mismo programa.
+
+---
+
+# 1. Descripción del proyecto
+
+El proyecto consiste en un sistema inteligente de rutas desarrollado en Python.
+
+El archivo principal del proyecto se denomina:
+
+**Act2Rutas.Py**
+
+El sistema representa una red de transporte conformada por seis estaciones:
+
+1. Terminal Norte  
+2. Universidad  
+3. Hospital  
+4. Centro  
+5. Estadio  
+6. Terminal Sur  
+
+Cada estación tiene conexiones con determinadas estaciones de la red.
+
+Cada conexión contiene tres elementos:
+
+- Estación de destino.
+- Tiempo de desplazamiento.
+- Línea utilizada.
+
+Por ejemplo, desde Terminal Norte existen dos posibles conexiones:
+
+- Terminal Norte → Universidad: 5 minutos, Línea A.
+- Terminal Norte → Centro: 12 minutos, Línea B.
+
+De esta manera, el sistema dispone de diferentes alternativas y debe analizar cuál resulta más conveniente dependiendo del origen y destino seleccionados.
+
+---
+
+# 2. Base de conocimiento
+
+La base de conocimiento del sistema está representada mediante un grafo.
+
+Cada estación funciona como un nodo y cada conexión representa una posible ruta de desplazamiento.
+
+La información utilizada es la siguiente:
+
+### Terminal Norte
+
+- Universidad: 5 minutos, Línea A.
+- Centro: 12 minutos, Línea B.
+
+### Universidad
+
+- Terminal Norte: 5 minutos, Línea A.
+- Hospital: 6 minutos, Línea A.
+
+### Hospital
+
+- Universidad: 6 minutos, Línea A.
+- Centro: 4 minutos, Línea A.
+- Estadio: 7 minutos, Línea C.
+
+### Centro
+
+- Terminal Norte: 12 minutos, Línea B.
+- Hospital: 4 minutos, Línea A.
+- Terminal Sur: 8 minutos, Línea B.
+
+### Estadio
+
+- Hospital: 7 minutos, Línea C.
+- Terminal Sur: 5 minutos, Línea C.
+
+### Terminal Sur
+
+- Centro: 8 minutos, Línea B.
+- Estadio: 5 minutos, Línea C.
+
+Esta estructura constituye la información que utiliza el sistema para analizar los diferentes caminos disponibles.
+
+---
+
+# 3. Sistema basado en reglas
+
+Además de la base de conocimiento, se definieron reglas que controlan el comportamiento del sistema.
+
+## Regla 1. Conexión disponible
+
+La primera regla establece:
+
+**Si existe una conexión entre dos estaciones y esta no se encuentra bloqueada, entonces el desplazamiento está permitido.**
+
+La función utilizada es:
+
+`conexion_disponible(origen, destino)`
+
+Esta función revisa si la conexión aparece dentro de la lista de conexiones bloqueadas.
+
+Si la conexión está bloqueada, devuelve `False`.
+
+Si se encuentra disponible, devuelve `True`.
+
+Esto permite que el sistema descarte determinadas rutas y busque otras alternativas.
+
+---
+
+# Regla 2. Cambio de línea
+
+La segunda regla establece:
+
+**Si durante el recorrido se cambia de una línea a otra, entonces se agregan 3 minutos al tiempo total.**
+
+La función utilizada es:
+
+`costo_transferencia(linea_actual, nueva_linea)`
+
+Por ejemplo:
+
+Hospital → Centro mediante Línea A.
+
+Centro → Terminal Sur mediante Línea B.
+
+Como existe un cambio entre Línea A y Línea B, el sistema agrega tres minutos adicionales.
+
+Esto permite representar el tiempo necesario para realizar una transferencia entre líneas.
+
+---
+
+# Regla 3. Llegada al destino
+
+La tercera regla establece:
+
+**Si la estación actual es igual a la estación seleccionada como destino, entonces el objetivo ha sido alcanzado.**
+
+La función utilizada es:
+
+`es_destino(estacion_actual, destino)`
+
+Cuando esta condición se cumple, la búsqueda termina y el sistema devuelve la ruta encontrada.
+
+---
+
+# 4. Búsqueda heurística
+
+Para encontrar la mejor ruta se utilizó el algoritmo A*.
+
+Este algoritmo utiliza la siguiente expresión:
+
+**f(n) = g(n) + h(n)**
+
+Donde:
+
+**g(n)** corresponde al costo real acumulado desde la estación de origen hasta la estación actual.
+
+**h(n)** corresponde a una estimación del costo restante para llegar al destino.
+
+**f(n)** corresponde al costo total estimado de una alternativa.
+
+El sistema utiliza esta información para decidir qué rutas analizar primero.
+
+---
+
+# 5. Cálculo de la heurística
+
+La función utilizada es:
+
+`calcular_heuristica(destino)`
+
+Esta función calcula una estimación del tiempo mínimo desde cada estación hasta el destino seleccionado.
+
+Para esto se utiliza una cola de prioridad.
+
+El sistema comienza desde el destino y va calculando las distancias más pequeñas encontradas hacia las demás estaciones.
+
+Esta información posteriormente es utilizada por el algoritmo A*.
+
+---
+
+# 6. Algoritmo A*
+
+La función principal de búsqueda es:
+
+`buscar_mejor_ruta(origen, destino)`
+
+Esta función recibe:
+
+- Estación de origen.
+- Estación de destino.
+
+Posteriormente realiza el siguiente proceso:
+
+1. Calcula la heurística.
+2. Crea una cola de prioridad.
+3. Agrega la estación inicial.
+4. Extrae la alternativa con menor costo estimado.
+5. Verifica si se llegó al destino.
+6. Revisa las conexiones disponibles.
+7. Calcula el costo real del recorrido.
+8. Verifica si existe cambio de línea.
+9. Agrega el costo de transferencia cuando corresponde.
+10. Calcula el costo estimado.
+11. Agrega nuevas alternativas a la cola.
+12. Continúa hasta encontrar el destino.
+
+Cuando encuentra una solución, devuelve:
+
+- Ruta encontrada.
+- Tiempo estimado.
+
+---
+
+# 7. Comandos y funciones utilizadas
+
+## 7.1 Comando para ejecutar el programa
+
+El archivo principal del proyecto es:
+
+**Act2Rutas.Py**
+
+Para ejecutarlo desde la terminal se utiliza:
+
+`python Act2Rutas.Py`
+
+Este comando le indica a Python que debe ejecutar el archivo donde se encuentra todo el sistema inteligente de rutas.
+
+Dependiendo de la instalación de Python, también puede utilizarse:
+
+`py Act2Rutas.Py`
+
+Al ejecutar este comando aparece el menú principal del programa.
+
+---
+
+## 7.2 Importación de librerías
+
+El programa utiliza:
+
+`import heapq`
+
+Esta librería se utiliza para trabajar con una cola de prioridad.
+
+También utiliza:
+
+`import tkinter as tk`
+
+Esta librería permite crear la representación gráfica del tren y las estaciones.
+
+---
+
+## 7.3 `heapq.heappush()`
+
+El comando:
+
+`heapq.heappush()`
+
+permite agregar una nueva alternativa dentro de la cola de prioridad.
+
+Esta cola organiza las diferentes rutas según su costo estimado.
+
+---
+
+## 7.4 `heapq.heappop()`
+
+El comando:
+
+`heapq.heappop()`
+
+permite extraer de la cola la alternativa con menor prioridad numérica, es decir, la opción que resulta más conveniente analizar en ese momento.
+
+Estos dos comandos son importantes dentro de la búsqueda heurística y del algoritmo A*.
+
+---
+
+## 7.5 `seleccionar_origen()`
+
+Esta función muestra las estaciones disponibles y solicita al usuario que seleccione una.
+
+El usuario debe ingresar un número entre 1 y 6.
+
+También se valida que el dato ingresado sea correcto.
+
+Si el usuario escribe letras, el sistema muestra un mensaje indicando que debe ingresar únicamente un número.
+
+---
+
+## 7.6 `seleccionar_destino(origen)`
+
+Esta función permite seleccionar la estación de destino.
+
+El sistema excluye automáticamente la estación que ya fue seleccionada como origen.
+
+De esta forma se evita que origen y destino sean iguales.
+
+Además, el programa muestra el precio correspondiente a cada destino.
+
+---
+
+## 7.7 Ejecución de la búsqueda
+
+Después de seleccionar origen y destino, el programa ejecuta:
+
+`ruta, tiempo_estimado = buscar_mejor_ruta(origen, destino)`
+
+Esta instrucción envía al algoritmo las dos estaciones seleccionadas.
+
+Como resultado se obtienen:
+
+**ruta:** conjunto de estaciones que debe recorrer el tren.
+
+**tiempo_estimado:** duración total del recorrido.
+
+---
+
+## 7.8 `animar_tren()`
+
+Después de encontrar la ruta se utiliza:
+
+`animar_tren()`
+
+Esta función abre una ventana gráfica creada con `tkinter`.
+
+En ella aparece:
+
+- El tren.
+- Los vagones.
+- Las vías.
+- La estación.
+- El nombre del recorrido.
+
+El tren se desplaza visualmente hasta cada estación correspondiente.
+
+---
+
+# 8. Tren utilizado
+
+Para complementar el sistema se creó una clase llamada:
+
+`Tren`
+
+El tren utilizado tiene tres vagones:
+
+- Pasajeros 1.
+- Pasajeros 2.
+- Equipaje.
+
+También existe una clase llamada:
+
+`Vagon`
+
+Cada vagón contiene:
+
+- Tipo.
+- Carga.
+- Capacidad.
+
+El programa puede calcular:
+
+- Número de vagones.
+- Capacidad total.
+- Carga actual total.
+
+---
+
+# 9. Selección del origen
+
+Al iniciar el programa aparece:
+
+**SELECCIONE LA ESTACIÓN DE ORIGEN**
+
+El usuario puede seleccionar:
+
+1. Terminal Norte  
+2. Universidad  
+3. Hospital  
+4. Centro  
+5. Estadio  
+6. Terminal Sur  
+
+Después de seleccionar una opción válida, el sistema guarda esta estación como punto de origen.
+
+---
+
+# 10. Selección del destino
+
+Posteriormente aparece:
+
+**SELECCIONE LA ESTACIÓN DE DESTINO**
+
+El sistema muestra las estaciones disponibles excepto la estación seleccionada como origen.
+
+Además, se muestra el precio correspondiente a cada destino.
+
+Esto impide que se seleccione como destino la misma estación de inicio.
+
+---
+
+# 11. Resultados obtenidos
+
+Después de ejecutar el algoritmo aparece:
+
+**MEJOR RUTA ENCONTRADA**
+
+El programa muestra:
+
+- Origen.
+- Destino.
+- Valor del viaje.
+- Ruta recomendada.
+- Tiempo estimado.
+- Tren asignado.
+
+A continuación se presentan algunas pruebas realizadas.
+
+---
+
+# 12. Prueba 1
+
+### Origen
+
+Terminal Norte
+
+### Destino
+
+Terminal Sur
+
+### Ruta encontrada
+
+Terminal Norte → Centro → Terminal Sur
+
+### Cálculo
+
+Terminal Norte → Centro = 12 minutos por Línea B.
+
+Centro → Terminal Sur = 8 minutos por Línea B.
+
+No existe cambio de línea.
+
+12 + 8 = 20 minutos.
+
+### Resultado
+
+**Tiempo estimado: 20 minutos.**
+
+El resultado es correcto porque ambas conexiones utilizan la misma línea.
+
+---
+
+# 13. Prueba 2
+
+### Origen
+
+Universidad
+
+### Destino
+
+Estadio
+
+### Ruta encontrada
+
+Universidad → Hospital → Estadio
+
+### Cálculo
+
+Universidad → Hospital = 6 minutos por Línea A.
+
+Hospital → Estadio = 7 minutos por Línea C.
+
+Existe un cambio de Línea A a Línea C.
+
+Se agregan 3 minutos.
+
+6 + 7 + 3 = 16 minutos.
+
+### Resultado
+
+**Tiempo estimado: 16 minutos.**
+
+El resultado demuestra que el sistema aplica correctamente la regla del cambio de línea.
+
+---
+
+# 14. Prueba 3
+
+### Origen
+
+Centro
+
+### Destino
+
+Universidad
+
+### Ruta encontrada
+
+Centro → Hospital → Universidad
+
+### Cálculo
+
+Centro → Hospital = 4 minutos.
+
+Hospital → Universidad = 6 minutos.
+
+Ambos recorridos utilizan la Línea A.
+
+4 + 6 = 10 minutos.
+
+### Resultado
+
+**Tiempo estimado: 10 minutos.**
+
+---
+
+# 15. Prueba 4
+
+### Origen
+
+Estadio
+
+### Destino
+
+Terminal Norte
+
+### Ruta encontrada
+
+Estadio → Hospital → Universidad → Terminal Norte
+
+### Cálculo
+
+Estadio → Hospital = 7 minutos por Línea C.
+
+Hospital → Universidad = 6 minutos por Línea A.
+
+Existe cambio de línea, por lo tanto:
+
+7 + 6 + 3 = 16 minutos.
+
+Universidad → Terminal Norte = 5 minutos.
+
+16 + 5 = 21 minutos.
+
+### Resultado
+
+**Tiempo estimado: 21 minutos.**
+
+---
+
+# 16. Prueba 5
+
+### Origen
+
+Terminal Norte
+
+### Destino
+
+Hospital
+
+### Ruta encontrada
+
+Terminal Norte → Universidad → Hospital
+
+### Cálculo
+
+Terminal Norte → Universidad = 5 minutos.
+
+Universidad → Hospital = 6 minutos.
+
+Ambos recorridos utilizan la Línea A.
+
+5 + 6 = 11 minutos.
+
+### Resultado
+
+**Tiempo estimado: 11 minutos.**
+
+---
+
+# 17. Simulación gráfica
+
+Después de mostrar la ruta encontrada, el sistema solicita:
+
+**Presione ENTER para iniciar el viaje...**
+
+Cuando el usuario presiona ENTER, se abre una ventana gráfica.
+
+El tren se desplaza hacia las estaciones correspondientes.
+
+Cuando llega a una estación intermedia aparece:
+
+**Parada: nombre de la estación**
+
+En consola también se muestra:
+
+**PARADA INTERMEDIA**
+
+Cuando llega al destino final aparece:
+
+**¡Llegamos a nombre de la estación!**
+
+y posteriormente:
+
+**ESTACIÓN FINAL**
+
+**EL TREN HA LLEGADO A SU DESTINO**
+
+---
+
+# 18. Reinicio del programa
+
+Después de terminar el recorrido aparece el siguiente menú:
+
+**¿QUÉ DESEA HACER?**
+
+1. Volver a iniciar  
+2. Salir
+
+Si se selecciona:
+
+**1. Volver a iniciar**
+
+el sistema comienza nuevamente y permite realizar otra prueba.
+
+Si se selecciona:
+
+**2. Salir**
+
+el programa finaliza.
+
+---
+
+# 19. Validación de errores
+
+El programa también controla diferentes errores de entrada.
+
+Por ejemplo, si el usuario escribe letras cuando debe seleccionar una estación, aparece:
+
+**Debe ingresar únicamente un número.**
+
+Si se escribe una opción que no está disponible, el programa solicita nuevamente una opción válida.
+
+Esto permite que la ejecución sea más segura y evita algunos errores durante el uso del sistema.
+
+---
+
+# 20. Resultados generales obtenidos
+
+Las pruebas realizadas permitieron comprobar que el sistema encuentra correctamente rutas entre diferentes estaciones.
+
+También se comprobó que:
+
+- El origen y destino pueden seleccionarse correctamente.
+- El sistema evita que origen y destino sean iguales.
+- Las conexiones bloqueadas pueden ser descartadas.
+- Los cambios de línea generan tres minutos adicionales.
+- El algoritmo encuentra una ruta válida.
+- El tiempo del recorrido se calcula correctamente.
+- La ruta encontrada puede visualizarse mediante una animación.
+- El sistema puede reiniciarse para realizar nuevas pruebas.
+
+---
+
+# 21. Instrucciones de ejecución
+
+Para ejecutar el proyecto se requiere tener Python 3 instalado.
+
+El archivo principal es:
+
+**Act2Rutas.Py**
+
+### Paso 1
+
+Abrir la carpeta donde está guardado el archivo.
+
+### Paso 2
+
+Abrir una terminal.
+
+### Paso 3
+
+Ejecutar:
+
+`python Act2Rutas.Py`
+
+También puede utilizarse:
+
+`py Act2Rutas.Py`
+
+### Paso 4
+
+Seleccionar la estación de origen.
+
+### Paso 5
+
+Seleccionar la estación de destino.
+
+### Paso 6
+
+Revisar la ruta recomendada y el tiempo estimado.
+
+### Paso 7
+
+Presionar ENTER para iniciar la simulación.
+
+### Paso 8
+
+Observar el recorrido del tren.
+
+### Paso 9
+
+Seleccionar si se desea volver a iniciar o salir.
+
+---
+
