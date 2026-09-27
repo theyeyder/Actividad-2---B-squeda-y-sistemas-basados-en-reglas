@@ -1,9 +1,11 @@
+# -*- coding: utf-8 -*-
+
 import heapq
 import tkinter as tk
 
 
 # ==========================================
-# CLASE VAG脫N
+# CLASE VAGÓN
 # ==========================================
 
 class Vagon:
@@ -35,7 +37,7 @@ class Tren:
     def __init__(self, nombre):
         self.nombre = nombre
         self.vagones = []
-        self.locomotora = "馃殏"
+        self.locomotora = "🚂"
 
     def agregar_vagon(self, vagon):
         self.vagones.append(vagon)
@@ -43,6 +45,7 @@ class Tren:
     def quitar_vagon(self):
         if self.vagones:
             return self.vagones.pop()
+        return None
 
     def carga_total(self):
         return sum(v.carga for v in self.vagones)
@@ -66,18 +69,9 @@ class Tren:
 # ==========================================
 
 tren = Tren("Ruta Inteligente")
-
-tren.agregar_vagon(
-    Vagon("Pasajeros 1", carga=45, capacidad=80)
-)
-
-tren.agregar_vagon(
-    Vagon("Pasajeros 2", carga=35, capacidad=80)
-)
-
-tren.agregar_vagon(
-    Vagon("Equipaje", carga=90, capacidad=200)
-)
+tren.agregar_vagon(Vagon("Pasajeros 1", carga=45, capacidad=80))
+tren.agregar_vagon(Vagon("Pasajeros 2", carga=35, capacidad=80))
+tren.agregar_vagon(Vagon("Equipaje", carga=90, capacidad=200))
 
 
 # ==========================================
@@ -87,35 +81,30 @@ tren.agregar_vagon(
 grafo = {
     "Terminal Norte": [
         ("Universidad", 5, "Linea A"),
-        ("Centro", 12, "Linea B")
+        ("Centro", 12, "Linea B"),
     ],
-
     "Universidad": [
         ("Terminal Norte", 5, "Linea A"),
-        ("Hospital", 6, "Linea A")
+        ("Hospital", 6, "Linea A"),
     ],
-
     "Hospital": [
         ("Universidad", 6, "Linea A"),
         ("Centro", 4, "Linea A"),
-        ("Estadio", 7, "Linea C")
+        ("Estadio", 7, "Linea C"),
     ],
-
     "Centro": [
         ("Terminal Norte", 12, "Linea B"),
         ("Hospital", 4, "Linea A"),
-        ("Terminal Sur", 8, "Linea B")
+        ("Terminal Sur", 8, "Linea B"),
     ],
-
     "Estadio": [
         ("Hospital", 7, "Linea C"),
-        ("Terminal Sur", 5, "Linea C")
+        ("Terminal Sur", 5, "Linea C"),
     ],
-
     "Terminal Sur": [
         ("Centro", 8, "Linea B"),
-        ("Estadio", 5, "Linea C")
-    ]
+        ("Estadio", 5, "Linea C"),
+    ],
 }
 
 
@@ -129,7 +118,7 @@ estaciones = {
     3: "Hospital",
     4: "Centro",
     5: "Estadio",
-    6: "Terminal Sur"
+    6: "Terminal Sur",
 }
 
 
@@ -143,7 +132,7 @@ precios_destino = {
     "Hospital": 4000,
     "Centro": 3000,
     "Estadio": 4500,
-    "Terminal Sur": 5500
+    "Terminal Sur": 5500,
 }
 
 
@@ -152,8 +141,8 @@ precios_destino = {
 # ==========================================
 
 conexiones_bloqueadas = [
-    # Ejemplo:
-    # ("Hospital", "Centro")
+    # Ejemplo para probar una ruta bloqueada:
+    # ("Hospital", "Centro"),
 ]
 
 
@@ -164,11 +153,9 @@ conexiones_bloqueadas = [
 def conexion_disponible(origen, destino):
     """
     REGLA 1:
-    Si existe conexi贸n entre dos estaciones
-    y no est谩 bloqueada,
-    entonces el desplazamiento est谩 permitido.
+    Si existe conexión entre dos estaciones y no está bloqueada,
+    entonces el desplazamiento está permitido.
     """
-
     if (origen, destino) in conexiones_bloqueadas:
         return False
 
@@ -181,10 +168,8 @@ def conexion_disponible(origen, destino):
 def costo_transferencia(linea_actual, nueva_linea):
     """
     REGLA 2:
-    Si el usuario cambia de l铆nea,
-    se agregan 3 minutos al recorrido.
+    Si el usuario cambia de línea, se agregan 3 minutos al recorrido.
     """
-
     if linea_actual is None:
         return 0
 
@@ -197,56 +182,39 @@ def costo_transferencia(linea_actual, nueva_linea):
 def es_destino(estacion_actual, destino):
     """
     REGLA 3:
-    Si la estaci贸n actual es igual
-    a la estaci贸n destino,
+    Si la estación actual es igual a la estación destino,
     el objetivo ha sido alcanzado.
     """
-
     return estacion_actual == destino
 
 
 # ==========================================
-# HEUR脥STICA
+# HEURÍSTICA
 # ==========================================
 
 def calcular_heuristica(destino):
     """
-    Calcula una estimaci贸n del tiempo m铆nimo
-    desde cada estaci贸n hasta el destino.
+    Calcula una estimación del tiempo mínimo desde cada estación
+    hasta el destino, sin sumar penalizaciones por transferencia.
+
+    Esa estimación funciona como una cota inferior para A*.
     """
-
-    distancias = {
-        estacion: float("inf")
-        for estacion in grafo
-    }
-
+    distancias = {estacion: float("inf") for estacion in grafo}
     distancias[destino] = 0
     cola = [(0, destino)]
 
     while cola:
-
-        distancia_actual, estacion_actual = heapq.heappop(
-            cola
-        )
+        distancia_actual, estacion_actual = heapq.heappop(cola)
 
         if distancia_actual > distancias[estacion_actual]:
             continue
 
-        for vecino, tiempo, linea in grafo[estacion_actual]:
-
+        for vecino, tiempo, _linea in grafo[estacion_actual]:
             nueva_distancia = distancia_actual + tiempo
 
             if nueva_distancia < distancias[vecino]:
-
                 distancias[vecino] = nueva_distancia
-
-                heapq.heappush(
-                    cola,
-                    (
-                        nueva_distancia,
-                        vecino
-                    )
-                )
+                heapq.heappush(cola, (nueva_distancia, vecino))
 
     return distancias
 
@@ -256,7 +224,12 @@ def calcular_heuristica(destino):
 # ==========================================
 
 def buscar_mejor_ruta(origen, destino):
+    """
+    Busca la ruta de menor tiempo total usando A*.
 
+    El estado incluye la estación y la línea actual porque el costo
+    futuro puede cambiar según exista o no una transferencia.
+    """
     heuristica = calcular_heuristica(destino)
 
     cola = []
@@ -265,69 +238,44 @@ def buscar_mejor_ruta(origen, destino):
     heapq.heappush(
         cola,
         (
-            heuristica[origen],
-            0,
+            heuristica[origen],  # f(n) = g(n) + h(n)
+            0,                   # g(n)
             contador,
             origen,
-            None,
-            [origen]
-        )
+            None,                # línea actual
+            [origen],
+        ),
     )
 
     visitados = {}
 
     while cola:
-
         (
-            costo_estimado,
+            _costo_estimado,
             costo_real,
-            identificador,
+            _identificador,
             estacion_actual,
             linea_actual,
-            ruta
+            ruta,
         ) = heapq.heappop(cola)
 
         if es_destino(estacion_actual, destino):
             return ruta, costo_real
 
-        estado = (
-            estacion_actual,
-            linea_actual
-        )
+        estado = (estacion_actual, linea_actual)
 
-        if estado in visitados:
-            if visitados[estado] <= costo_real:
-                continue
+        if estado in visitados and visitados[estado] <= costo_real:
+            continue
 
         visitados[estado] = costo_real
 
-        for vecino, tiempo, nueva_linea in grafo.get(
-            estacion_actual,
-            []
-        ):
-
-            if not conexion_disponible(
-                estacion_actual,
-                vecino
-            ):
+        for vecino, tiempo, nueva_linea in grafo.get(estacion_actual, []):
+            if not conexion_disponible(estacion_actual, vecino):
                 continue
 
-            transferencia = costo_transferencia(
-                linea_actual,
-                nueva_linea
-            )
-
-            nuevo_costo = (
-                costo_real
-                + tiempo
-                + transferencia
-            )
-
-            estimacion = (
-                nuevo_costo
-                + heuristica[vecino]
-            )
-
+            transferencia = costo_transferencia(linea_actual, nueva_linea)
+            nuevo_costo = costo_real + tiempo + transferencia
+            estimacion = nuevo_costo + heuristica[vecino]
             nueva_ruta = ruta + [vecino]
 
             contador += 1
@@ -340,8 +288,8 @@ def buscar_mejor_ruta(origen, destino):
                     contador,
                     vecino,
                     nueva_linea,
-                    nueva_ruta
-                )
+                    nueva_ruta,
+                ),
             )
 
     return None, None
@@ -352,23 +300,14 @@ def buscar_mejor_ruta(origen, destino):
 # ==========================================
 
 def formatear_precio(valor):
-    return (
-        f"${valor:,.0f}"
-        .replace(",", ".")
-    )
+    return f"${valor:,.0f}".replace(",", ".")
 
 
 # ==========================================
-# ANIMACI脫N GR脕FICA DEL TREN CON VAGONES
+# ANIMACIÓN GRÁFICA DEL TREN
 # ==========================================
 
-def dibujar_tren(canvas, x, y, tren):
-    """
-    Dibuja un tren gr谩fico inspirado en el modelo de referencia:
-    tres vagones rectangulares, locomotora azul y ruedas.
-    Retorna los elementos dibujados para poder moverlos.
-    """
-
+def dibujar_tren(canvas, x, y, tren_obj):
     elementos = []
 
     verde = "#2f9e24"
@@ -381,8 +320,7 @@ def dibujar_tren(canvas, x, y, tren):
     separacion = 24
     diametro_rueda = 28
 
-    # Dibujar vagones
-    for i, vagon in enumerate(tren.vagones):
+    for i, vagon in enumerate(tren_obj.vagones):
         vx = x + i * (ancho_vagon + separacion)
 
         cuerpo = canvas.create_rectangle(
@@ -392,21 +330,19 @@ def dibujar_tren(canvas, x, y, tren):
             y + alto_vagon,
             outline=verde,
             width=3,
-            fill=blanco
+            fill=blanco,
         )
         elementos.append(cuerpo)
 
-        # Texto corto del vag贸n
         etiqueta = canvas.create_text(
             vx + ancho_vagon / 2,
             y + alto_vagon / 2,
             text=vagon.tipo,
             font=("Arial", 9, "bold"),
-            fill="#1f2937"
+            fill="#1f2937",
         )
         elementos.append(etiqueta)
 
-        # Ruedas
         for rueda_x in (vx + 28, vx + ancho_vagon - 28):
             rueda = canvas.create_oval(
                 rueda_x - diametro_rueda / 2,
@@ -415,11 +351,10 @@ def dibujar_tren(canvas, x, y, tren):
                 y + alto_vagon + 10 + diametro_rueda,
                 fill=azul,
                 outline=borde,
-                width=2
+                width=2,
             )
             elementos.append(rueda)
 
-        # Acople al siguiente vag贸n / locomotora
         acople = canvas.create_rectangle(
             vx + ancho_vagon,
             y + 20,
@@ -427,12 +362,11 @@ def dibujar_tren(canvas, x, y, tren):
             y + 28,
             fill=azul,
             outline=borde,
-            width=2
+            width=2,
         )
         elementos.append(acople)
 
-    # Locomotora a la derecha
-    locomotora_x = x + len(tren.vagones) * (ancho_vagon + separacion)
+    locomotora_x = x + len(tren_obj.vagones) * (ancho_vagon + separacion)
 
     cabina = canvas.create_rectangle(
         locomotora_x,
@@ -441,11 +375,10 @@ def dibujar_tren(canvas, x, y, tren):
         y + alto_vagon,
         outline=verde,
         width=3,
-        fill=blanco
+        fill=blanco,
     )
     elementos.append(cabina)
 
-    # Parte azul frontal de la locomotora
     caldera = canvas.create_arc(
         locomotora_x + 18,
         y - 8,
@@ -456,11 +389,10 @@ def dibujar_tren(canvas, x, y, tren):
         style=tk.PIESLICE,
         fill=azul,
         outline=borde,
-        width=2
+        width=2,
     )
     elementos.append(caldera)
 
-    # Chimenea
     chimenea = canvas.create_rectangle(
         locomotora_x + 55,
         y - 70,
@@ -468,7 +400,7 @@ def dibujar_tren(canvas, x, y, tren):
         y - 28,
         fill=azul,
         outline=borde,
-        width=2
+        width=2,
     )
     elementos.append(chimenea)
 
@@ -479,11 +411,10 @@ def dibujar_tren(canvas, x, y, tren):
         y - 66,
         fill=azul,
         outline=borde,
-        width=2
+        width=2,
     )
     elementos.append(tapa)
 
-    # Rueda de locomotora
     rueda_loco = canvas.create_oval(
         locomotora_x + 42,
         y + alto_vagon + 10,
@@ -491,7 +422,7 @@ def dibujar_tren(canvas, x, y, tren):
         y + alto_vagon + 44,
         fill=azul,
         outline=borde,
-        width=2
+        width=2,
     )
     elementos.append(rueda_loco)
 
@@ -499,24 +430,21 @@ def dibujar_tren(canvas, x, y, tren):
 
 
 def dibujar_estacion(canvas, nombre):
-    """
-    Dibuja una parada de tren sencilla al lado derecho.
-    """
-
     x = 775
     y = 115
 
-    # Techo
     canvas.create_polygon(
-        x - 20, y + 35,
-        x + 85, y - 5,
-        x + 190, y + 35,
+        x - 20,
+        y + 35,
+        x + 85,
+        y - 5,
+        x + 190,
+        y + 35,
         fill="#d1d5db",
         outline="#374151",
-        width=2
+        width=2,
     )
 
-    # Edificio
     canvas.create_rectangle(
         x,
         y + 35,
@@ -524,10 +452,9 @@ def dibujar_estacion(canvas, nombre):
         y + 150,
         fill="#f8fafc",
         outline="#374151",
-        width=2
+        width=2,
     )
 
-    # Puerta
     canvas.create_rectangle(
         x + 65,
         y + 85,
@@ -535,10 +462,9 @@ def dibujar_estacion(canvas, nombre):
         y + 150,
         fill="#cbd5e1",
         outline="#374151",
-        width=2
+        width=2,
     )
 
-    # Letrero
     canvas.create_rectangle(
         x + 15,
         y + 50,
@@ -546,7 +472,7 @@ def dibujar_estacion(canvas, nombre):
         y + 78,
         fill="#ffffff",
         outline="#2f9e24",
-        width=2
+        width=2,
     )
 
     canvas.create_text(
@@ -554,26 +480,20 @@ def dibujar_estacion(canvas, nombre):
         y + 64,
         text=nombre,
         font=("Arial", 10, "bold"),
-        fill="#111827"
+        fill="#111827",
     )
 
-    # And茅n
     canvas.create_rectangle(
         x - 35,
         y + 150,
         x + 205,
         y + 165,
         fill="#9ca3af",
-        outline="#6b7280"
+        outline="#6b7280",
     )
 
 
-def animar_tren(origen, destino, tren, destino_final=False):
-    """
-    Abre una ventana gr谩fica y mueve el tren completo
-    desde el lado izquierdo hasta la estaci贸n destino.
-    """
-
+def animar_tren(origen, destino, tren_obj, destino_final=False):
     ventana = tk.Tk()
     ventana.title("Sistema inteligente de rutas")
     ventana.geometry("1000x390")
@@ -584,39 +504,21 @@ def animar_tren(origen, destino, tren, destino_final=False):
         width=1000,
         height=390,
         bg="white",
-        highlightthickness=0
+        highlightthickness=0,
     )
     canvas.pack()
 
-    # Encabezado
     canvas.create_text(
         500,
         28,
-        text=f"{origen}  鈫? {destino}",
+        text=f"{origen} → {destino}",
         font=("Arial", 16, "bold"),
-        fill="#111827"
+        fill="#111827",
     )
 
-    # V铆a
-    canvas.create_line(
-        0,
-        290,
-        1000,
-        290,
-        fill="#4b5563",
-        width=4
-    )
+    canvas.create_line(0, 290, 1000, 290, fill="#4b5563", width=4)
+    canvas.create_line(0, 306, 1000, 306, fill="#4b5563", width=4)
 
-    canvas.create_line(
-        0,
-        306,
-        1000,
-        306,
-        fill="#4b5563",
-        width=4
-    )
-
-    # Durmientes
     for x in range(0, 1000, 35):
         canvas.create_line(
             x,
@@ -624,12 +526,11 @@ def animar_tren(origen, destino, tren, destino_final=False):
             x + 12,
             314,
             fill="#6b7280",
-            width=2
+            width=2,
         )
 
     dibujar_estacion(canvas, destino)
 
-    # El tren inicia fuera de la ventana
     inicio_x = -560
     posicion_y = 205
 
@@ -637,30 +538,21 @@ def animar_tren(origen, destino, tren, destino_final=False):
         canvas,
         inicio_x,
         posicion_y,
-        tren
+        tren_obj,
     )
 
-    # Distancia que debe avanzar para quedar junto a la estaci贸n
     pasos = 150
     desplazamiento = 5
 
     def mover(paso=0):
         if paso < pasos:
             for elemento in elementos:
-                canvas.move(
-                    elemento,
-                    desplazamiento,
-                    0
-                )
+                canvas.move(elemento, desplazamiento, 0)
 
-            ventana.after(
-                25,
-                lambda: mover(paso + 1)
-            )
-
+            ventana.after(25, lambda: mover(paso + 1))
         else:
             if destino_final:
-                mensaje = f"隆Llegamos a {destino}!"
+                mensaje = f"¡Llegamos a {destino}!"
             else:
                 mensaje = f"Parada: {destino}"
 
@@ -669,109 +561,72 @@ def animar_tren(origen, destino, tren, destino_final=False):
                 345,
                 text=mensaje,
                 font=("Arial", 18, "bold"),
-                fill="#176b87"
+                fill="#176b87",
             )
 
-            # Mantener la llegada visible y cerrar autom谩ticamente
-            ventana.after(
-                1800,
-                ventana.destroy
-            )
+            ventana.after(1800, ventana.destroy)
 
-    ventana.after(
-        300,
-        mover
-    )
-
+    ventana.after(300, mover)
     ventana.mainloop()
 
 
 # ==========================================
-# MOSTRAR PARADA INTERMEDIA EN CONSOLA
+# MENSAJES DE PARADA Y LLEGADA
 # ==========================================
 
 def mostrar_parada(estacion):
-
     print("\n============================================")
     print(f"       PARADA INTERMEDIA: {estacion}")
     print("============================================")
-    print("El tren contin煤a su recorrido...")
+    print("El tren continúa su recorrido...")
     print("============================================")
 
 
-# ==========================================
-# MOSTRAR LLEGADA FINAL EN CONSOLA
-# ==========================================
-
 def mostrar_estacion(destino):
-
     print("\n============================================")
-    print(f"       ESTACI脫N FINAL: {destino}")
+    print(f"       ESTACIÓN FINAL: {destino}")
     print("============================================")
     print("       EL TREN HA LLEGADO A SU DESTINO")
     print("============================================\n")
 
 
 # ==========================================
-# SELECCIONAR ESTACI脫N DE ORIGEN
+# SELECCIÓN DE ESTACIONES
 # ==========================================
 
 def seleccionar_origen():
-
-    print("================================")
-    print("\nSELECCIONE LA ESTACI脫N DE ORIGEN")
+    print("\n================================")
+    print("SELECCIONE LA ESTACIÓN DE ORIGEN")
     print("================================")
 
     for numero, estacion in estaciones.items():
         print(f"{numero}. {estacion}")
 
     while True:
-
         try:
-
-            opcion = int(
-                input(
-                    "\nSeleccione una opci贸n: "
-                )
-            )
+            opcion = int(input("\nSeleccione una opción: "))
 
             if opcion in estaciones:
                 return estaciones[opcion]
 
-            print(
-                "\nOpci贸n incorrecta."
-            )
-
-            print(
-                "Seleccione un n煤mero del 1 al 6."
-            )
+            print("\nOpción incorrecta.")
+            print("Seleccione un número del 1 al 6.")
 
         except ValueError:
+            print("\nDebe ingresar únicamente un número.")
 
-            print(
-                "\nDebe ingresar 煤nicamente un n煤mero."
-            )
-
-
-# ==========================================
-# SELECCIONAR ESTACI脫N DE DESTINO
-# ==========================================
 
 def seleccionar_destino(origen):
-
-    print("=================================")
-    print("\nSELECCIONE LA ESTACI脫N DE DESTINO")
+    print("\n=================================")
+    print("SELECCIONE LA ESTACIÓN DE DESTINO")
     print("=================================")
 
     opciones_destino = {}
     numero = 1
 
     for estacion in estaciones.values():
-
         if estacion != origen:
-
             precio = precios_destino[estacion]
-
             opciones_destino[numero] = estacion
 
             print(
@@ -779,35 +634,20 @@ def seleccionar_destino(origen):
                 f"{estacion} - "
                 f"{formatear_precio(precio)}"
             )
-
             numero += 1
 
     while True:
-
         try:
-
-            opcion = int(
-                input(
-                    "\nSeleccione una opci贸n: "
-                )
-            )
+            opcion = int(input("\nSeleccione una opción: "))
 
             if opcion in opciones_destino:
                 return opciones_destino[opcion]
 
-            print(
-                "\nOpci贸n incorrecta."
-            )
-
-            print(
-                "Seleccione una de las opciones disponibles."
-            )
+            print("\nOpción incorrecta.")
+            print("Seleccione una de las opciones disponibles.")
 
         except ValueError:
-
-            print(
-                "\nDebe ingresar 煤nicamente un n煤mero."
-            )
+            print("\nDebe ingresar únicamente un número.")
 
 
 # ==========================================
@@ -815,182 +655,71 @@ def seleccionar_destino(origen):
 # ==========================================
 
 def ejecutar_sistema():
-
-    print(
-        "\n*****************************************************"
-    )
-
-    print(
-        "\nHOLA, BIENVENIDO AL SISTEMA INTELIGENTE DE RUTAS"
-    )
-
-    print(
-        "\n*****************************************************"
-    )
+    print("\n*****************************************************")
+    print("HOLA, BIENVENIDO AL SISTEMA INTELIGENTE DE RUTAS")
+    print("*****************************************************")
 
     print("\nTREN DISPONIBLE")
     print("===============")
     print(tren)
-
-    print(
-        f"\nN煤mero de vagones: {len(tren)}"
-    )
-
-    print(
-        f"Capacidad total de los vagones: "
-        f"{tren.capacidad_total()}"
-    )
-
-    print(
-        f"Carga actual total: "
-        f"{tren.carga_total()}"
-    )
-
-
-    # ==========================================
-    # ORIGEN
-    # ==========================================
+    print(f"\nNúmero de vagones: {len(tren)}")
+    print(f"Capacidad total de los vagones: {tren.capacidad_total()}")
+    print(f"Carga actual total: {tren.carga_total()}")
 
     origen = seleccionar_origen()
+    print(f"\nEstación de origen seleccionada: {origen}")
 
-    print(
-        f"\nEstaci贸n de origen seleccionada: {origen}"
-    )
+    destino = seleccionar_destino(origen)
+    precio = precios_destino[destino]
 
+    print(f"\nEstación de destino seleccionada: {destino}")
+    print(f"Precio del viaje: {formatear_precio(precio)}")
 
-    # ==========================================
-    # DESTINO
-    # ==========================================
-
-    destino = seleccionar_destino(
-        origen
-    )
-
-    precio = precios_destino[
-        destino
-    ]
-
-    print(
-        f"\nEstaci贸n de destino seleccionada: {destino}"
-    )
-
-    print(
-        f"Precio del viaje: {formatear_precio(precio)}"
-    )
-
-
-    # ==========================================
-    # BUSCAR MEJOR RUTA
-    # ==========================================
-
-    ruta, tiempo_estimado = buscar_mejor_ruta(
-        origen,
-        destino
-    )
-
-
-    # ==========================================
-    # MOSTRAR RESULTADO
-    # ==========================================
+    ruta, tiempo_estimado = buscar_mejor_ruta(origen, destino)
 
     if ruta:
+        print("\n================================")
+        print("      MEJOR RUTA ENCONTRADA")
+        print("================================")
 
-        print(
-            "\n================================"
-        )
+        print(f"\nOrigen: {origen}")
+        print(f"Destino: {destino}")
+        print(f"Valor del viaje: {formatear_precio(precio)}")
 
-        print(
-            "      MEJOR RUTA ENCONTRADA"
-        )
+        print("\nRuta recomendada:")
+        print(" -> ".join(ruta))
 
-        print(
-            "================================"
-        )
-
-        print(
-            f"\nOrigen: {origen}"
-        )
-
-        print(
-            f"Destino: {destino}"
-        )
-
-        print(
-            f"Valor del viaje: "
-            f"{formatear_precio(precio)}"
-        )
-
-        print(
-            "\nRuta recomendada:"
-        )
-
-        print(
-            " -> ".join(ruta)
-        )
-
-        print(
-            f"\nTiempo estimado: "
-            f"{tiempo_estimado} minutos"
-        )
+        print(f"\nTiempo estimado: {tiempo_estimado} minutos")
 
         print("\nTren asignado:")
         print(tren.dibujo())
 
-
-        # ======================================
-        # INICIAR SIMULACI脫N DEL VIAJE
-        # ======================================
-
-        input(
-            "\nPresione ENTER para iniciar el viaje..."
-        )
+        input("\nPresione ENTER para iniciar el viaje...")
 
         for i in range(len(ruta) - 1):
-
             estacion_actual = ruta[i]
             siguiente_estacion = ruta[i + 1]
-
-            es_final = (
-                siguiente_estacion == destino
-            )
+            es_final = siguiente_estacion == destino
 
             animar_tren(
                 estacion_actual,
                 siguiente_estacion,
                 tren,
-                destino_final=es_final
+                destino_final=es_final,
             )
 
             if not es_final:
+                mostrar_parada(siguiente_estacion)
 
-                mostrar_parada(
-                    siguiente_estacion
-                )
+        mostrar_estacion(destino)
 
-
-        # ======================================
-        # LLEGADA AL DESTINO FINAL
-        # ======================================
-
-        mostrar_estacion(
-            destino
-        )
-
-        print(
-            f"Destino final: {destino}"
-        )
-
-        print(
-            f"Valor pagado: {formatear_precio(precio)}"
-        )
-
+        print(f"Destino final: {destino}")
+        print(f"Valor pagado: {formatear_precio(precio)}")
         print(
             f"Tiempo estimado del recorrido: "
             f"{tiempo_estimado} minutos"
         )
-
     else:
-
         print(
             "\nNo existe una ruta disponible "
             "entre las estaciones seleccionadas."
@@ -998,76 +727,40 @@ def ejecutar_sistema():
 
 
 # ==========================================
-# MEN脷 PARA VOLVER A INICIAR
+# MENÚ PRINCIPAL
 # ==========================================
 
-while True:
-
-    ejecutar_sistema()
-
-    print(
-        "\n============================================"
-    )
-
-    print(
-        "驴QU脡 DESEA HACER?"
-    )
-
-    print(
-        "============================================"
-    )
-
-    print("1. Volver a iniciar")
-    print("2. Salir")
-
+def main():
     while True:
+        ejecutar_sistema()
 
-        try:
+        print("\n============================================")
+        print("¿QUÉ DESEA HACER?")
+        print("============================================")
+        print("1. Volver a iniciar")
+        print("2. Salir")
 
-            opcion_final = int(
-                input(
-                    "\nSeleccione una opci贸n: "
-                )
-            )
+        while True:
+            try:
+                opcion_final = int(input("\nSeleccione una opción: "))
 
-            if opcion_final in [1, 2]:
-                break
+                if opcion_final in (1, 2):
+                    break
 
-            print(
-                "\nOpci贸n incorrecta. "
-                "Seleccione 1 o 2."
-            )
+                print("\nOpción incorrecta. Seleccione 1 o 2.")
 
-        except ValueError:
+            except ValueError:
+                print("\nDebe ingresar únicamente un número.")
 
-            print(
-                "\nDebe ingresar 煤nicamente un n煤mero."
-            )
+        if opcion_final == 1:
+            print("\nREINICIANDO EL SISTEMA...")
+            print("============================================\n")
+        else:
+            print("\n============================================")
+            print("GRACIAS POR UTILIZAR EL SISTEMA DE RUTAS")
+            print("============================================\n")
+            break
 
-    if opcion_final == 1:
 
-        print(
-            "\n\nREINICIANDO EL SISTEMA..."
-        )
-
-        print(
-            "============================================\n"
-        )
-
-        continue
-
-    else:
-
-        print(
-            "\n============================================"
-        )
-
-        print(
-            "GRACIAS POR UTILIZAR EL SISTEMA DE RUTAS"
-        )
-
-        print(
-            "============================================\n"
-        )
-
-        break
+if __name__ == "__main__":
+    main()
